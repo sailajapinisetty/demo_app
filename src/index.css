@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&family=Sora:wght@400;600;700&display=swap');
 
 :root {
-  --bg-main: #fef4e9;
-  --bg-accent: #f9d5b8;
+  --bg-main: #e2e1ea;
+  --bg-accent: #e2ece6;
   --ink: #231511;
   --ink-soft: #5b3f36;
   --panel: rgba(255, 250, 243, 0.84);
