@@ -82,7 +82,7 @@ function App() {
       <div className="app-shell">
         <header className="site-header">
           <Link to="/" className="brand" data-testid="brand-link">
-            Ember Market
+            Market place
           </Link>
           <nav className="main-nav">
             <Link to="/" data-testid="nav-home">
