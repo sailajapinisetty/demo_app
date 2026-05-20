@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  BrowserRouter,
+  HashRouter,
   Link,
   Navigate,
   Route,
@@ -78,7 +78,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="app-shell">
         <header className="site-header">
           <Link to="/" className="brand" data-testid="brand-link">
@@ -139,7 +139,7 @@ function App() {
           </Routes>
         </main>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
