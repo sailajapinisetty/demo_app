@@ -52,6 +52,7 @@ jobs:
       # 6. Post the Claude Report directly into the GitHub PR Comments
       - name: Post Report to PR
         uses: mshick/add-pr-comment@v2
-        if: always() # Ensures the report posts even if tests fail
+        if: always() 
         with:
-          file-path: ./ai-testing-platform/pipeline-output.txt
+          # 🔴 FIXED: Changed from 'file-path' to 'message-path'
+          message-path: ./ai-testing-platform/pipeline-output.txt
