@@ -34,7 +34,7 @@ jobs:
           npm install
           npx playwright install --with-deps
 
-      # 4. 🚀 THE NATIVE FIX: Boot the React Server quietly using nohup
+      # 4.  THE NATIVE FIX: Boot the React Server quietly using nohup
       # This strips all process handles, forcing the Linux shell to proceed immediately.
       - name: Start React App in Background
         run: |
@@ -56,3 +56,13 @@ jobs:
         if: always() # Ensures the metrics drop even if tests hit structural breaks
         with:
           message-path: ./ai-testing-platform/pipeline-output.txt
+      
+        # 7. Upload the physical files to the GitHub Actions dashboard
+      - name: Upload Test Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-generated-test-suite
+          path: |
+            ./ai-testing-platform/generated.spec.js
+            ./ai-testing-platform/pipeline-output.txt

@@ -116,7 +116,7 @@ async function runCompleteAIPipeline() {
 
     await browser.close();
   } catch (globalError) {
-    console.error("❌ Pipeline hit unhandled execution exception:", globalError);
+    console.error(" Pipeline hit unhandled execution exception:", globalError);
   } finally {
     // Generate the markdown document regardless of run outcome
     buildMarkdownReport();
