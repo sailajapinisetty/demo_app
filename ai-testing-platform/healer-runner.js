@@ -116,7 +116,7 @@ async function runCompleteAIPipeline() {
 
     await browser.close();
   } catch (globalError) {
-    console.error("❌ Pipeline hit unhandled execution exception:", globalError);
+    console.error(" Pipeline hit unhandled execution exception:", globalError);
   } finally {
     // Generate the markdown document regardless of run outcome
     buildMarkdownReport();
@@ -150,4 +150,10 @@ function buildMarkdownReport() {
   console.log(" Pipeline execution report generated successfully: ./pipeline-output.txt");
 }
 
-runCompleteAIPipeline();
+runCompleteAIPipeline().then(() => {
+  console.log("🏁 Pipeline loop completely done. Sending clean exit signal.");
+  process.exit(0); // 🔴 FIXED: Forces Node to close execution handles cleanly
+}).catch((err) => {
+  console.error("❌ Fatal loop error:", err);
+  process.exit(1);
+});
