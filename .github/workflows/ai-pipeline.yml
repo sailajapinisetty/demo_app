@@ -26,13 +26,14 @@ jobs:
         with:
           node-version: 20
 
-      # 3. Start your React App in the background
+     # 3. Start your React App using PM2 (Ensures clean process detachment)
       - name: Install & Start React Demo App
         run: |
           npm install
-          npm run dev & 
-          # This forces the runner to pause until port 5173 is actively serving traffic
-          npx wait-on http://localhost:5173 --timeout 30000 
+          npm install -g pm2
+          pm2 start npm --name "react-app" -- run dev
+          # Wait up to 30 seconds for the application port to become live
+          npx wait-on http://localhost:5173 --timeout 30000
 
       # 4. Install dependencies for your AI platform folder
       - name: Install Platform Dependencies
@@ -41,16 +42,15 @@ jobs:
           npm install
           npx playwright install --with-deps
 
-      # 5. Run the Smart Test Script using Claude
+       # 5. Run the Smart Test Script using Claude & Clean Stop Server
       - name: Run Self-Healing Automation
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           cd ai-testing-platform
-          #  FIXED: Execute runner, save the process ID, and force kill background servers when finished
           node healer-runner.js
-          echo "Test run step complete. Clean killing active background services..."
-          pkill -f "node" || true
+          echo "Pipeline calculations complete. Stopping active background servers..."
+          pm2 delete all || true
 
       # 6. Post the Claude Report directly into the GitHub PR Comments
       - name: Post Report to PR
