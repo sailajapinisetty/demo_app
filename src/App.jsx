@@ -177,7 +177,7 @@ function HomePage({ addToCart, cartCount }) {
           placeholder="Try: Watch"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          data-testid="search-input"
+          data-testid="productsearch-input"
         />
 
         <label htmlFor="category">Category</label>

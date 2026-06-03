@@ -62,6 +62,8 @@ async function runCompleteAIPipeline() {
     });
     
     const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(5000);
+    page.setDefaultTimeout(3000); // 3 seconds max for clicking elements
     await page.goto('http://localhost:5173');
 
     // MOCK FAILURE SCENARIO: Intentionally look for a legacy element selector to trigger our healing block demo live
