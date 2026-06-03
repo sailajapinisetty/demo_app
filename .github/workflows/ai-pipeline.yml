@@ -1,0 +1,52 @@
+name: AI Self-Healing Test Pipeline
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ai-test-and-heal:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches all history so we can look at the git diff
+
+      # 2. Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 3. Start your React App in the background
+      - name: Install & Start React Demo App
+        run: |
+          npm install
+          npm run dev & 
+        # The '&' keeps it running in the background so the runner can proceed
+
+      # 4. Install dependencies for your AI platform folder
+      - name: Install Platform Dependencies
+        run: |
+          cd ai-testing-platform
+          npm install
+          npx playwright install --with-deps
+
+      # 5. Run the Smart Test Script using Claude
+      - name: Run Self-Healing Automation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          cd ai-testing-platform
+          node healer-runner.js > pipeline-output.txt
+          cat pipeline-output.txt
+
+      # 6. Post the Claude Report directly into the GitHub PR Comments
+      - name: Post Report to PR
+        uses: mshick/github-actions-comment-on-pr@v2
+        if: always()
+        with:
+          filePath: ./ai-testing-platform/pipeline-output.txt

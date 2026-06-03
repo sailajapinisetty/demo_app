@@ -208,7 +208,7 @@ function HomePage({ addToCart, cartCount }) {
               <h2>{product.name}</h2>
               <p>{product.description}</p>
               <div className="card-footer">
-                <strong>{money.format(product.price)}</strong>
+                <strong id={`price-${product.id}`}>{money.format(product.price)}</strong>
                 <div className="card-actions">
                   <Link
                     to={`/product/${product.id}`}
@@ -248,7 +248,7 @@ function ProductPage({ addToCart }) {
         <p className="product-category">{product.category}</p>
         <h1>{product.name}</h1>
         <p>{product.description}</p>
-        <strong>{money.format(product.price)}</strong>
+        <strong id={`price-${product.id}`}>{money.format(product.price)}</strong>
         <div className="details-actions">
           <button
             type="button"
@@ -282,7 +282,9 @@ function CartPage({ cartItems, subtotal, removeFromCart, updateQuantity }) {
               <li key={product.id} data-testid={`cart-item-${product.id}`}>
                 <div>
                   <h2>{product.name}</h2>
-                  <p>{money.format(product.price)} each</p>
+                  <p>
+                    <span id={`price-${product.id}`}>{money.format(product.price)}</span>{' '}each
+                  </p>
                 </div>
 
                 <div className="quantity-controls">
@@ -351,9 +353,9 @@ function CheckoutPage({ cartItems, subtotal, onCheckoutComplete }) {
     <section className="page checkout-page" data-testid="checkout-page">
       <h1>Checkout</h1>
       <form className="panel checkout-form" onSubmit={handleSubmit} data-testid="checkout-form">
-        <label htmlFor="name">Full name</label>
+        <label htmlFor="fullname">Full name</label>
         <input
-          id="name"
+          id="fullname"
           value={name}
           onChange={(event) => setName(event.target.value)}
           required
