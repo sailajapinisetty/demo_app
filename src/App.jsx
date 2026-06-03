@@ -170,14 +170,14 @@ function HomePage({ addToCart, cartCount }) {
       </div>
 
       <div className="filters">
-        <label htmlFor="productsearch">Search</label>
+        <label htmlFor="search">Search</label>
         <input
-          id="productsearch"
+          id="search"
           type="search"
           placeholder="Try: Watch"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          data-testid="productsearch-input"
+          data-testid="search-input"
         />
 
         <label htmlFor="category">Category</label>
