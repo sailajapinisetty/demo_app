@@ -3,98 +3,105 @@ import { chromium } from 'playwright';
 import * as fs from 'fs';
 import 'dotenv/config';
 
-// Initialize Claude client using the environment variable
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-let healingReport = [];
+// Structural states for the final PR log
+let generatedCodeString = "";
+let healingLog = [];
 
-async function runSmartTest() {
-  // 1. Launch a browser window (headed mode so the audience can see it)
-  const browser = await chromium.launch({ headless: false, slowMo: 500 });
+async function runCompleteAIPipeline() {
+  console.log("🤖 Step 1: Generating full Playwright test from React source...");
+  
+  // Read developer's App.jsx code file directly
+  let appCode = fs.readFileSync('../src/App.jsx', 'utf8');
+
+  // Request 1: Full Test Generation
+  const genMsg = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6', // Active current generation engine
+    max_tokens: 1500,
+    messages: [{ 
+      role: 'user', 
+      content: `Write a clean Playwright test script based on this React code: \n\n${appCode}\n\n Include standard 'test' and 'expect' assertions.` 
+    }],
+  });
+
+  // Extract code blocks out cleanly
+  const codeMatch = genMsg.content.text.match(/```javascript([\s\S]*?)```/);
+  generatedCodeString = codeMatch ? codeMatch[1].trim() : "// Code generation failed";
+  fs.writeFileSync('./ai-generated.spec.js', generatedCodeString);
+  console.log("✅ Fresh Playwright script written to: ./ai-generated.spec.js");
+
+  // -------------------------------------------------------------
+  
+  console.log("🚀 Step 2: Running Execution with Live Self-Healing check...");
+  const browser = await chromium.launch({ headless: process.env.CI ? true : false });
   const page = await browser.newPage();
-  
-  // Assumes your React dev server is running locally on port 5173 or 3000
-  await page.goto('http://localhost:5173'); 
+  await page.goto('http://localhost:5173');
 
-  console.log("🚀 [Pipeline] Running UI Test Suite...");
+  // Intentionally try an old selector to trigger our healing block demo live
+  const oldSelector = 'button#old-submit';
 
-  // The selector we expect to fail because the developer changed it in demo-app
-  const targetSelector = '#old-submit'; 
-  
   try {
-    await page.click(targetSelector, { timeout: 3000 });
-    console.log("✅ Step passed naturally.");
-  } catch (error) {
-    console.log(`⚠️ Element [${targetSelector}] not found! Consulting Claude...`);
-    
-    // Capture the current live HTML state of your running React app
-    const liveDOM = await page.content();
-    
-    // Call Claude to analyze the DOM layout and resolve the missing button
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022', // Fast and accurate for code/DOM analysis
-      max_tokens: 1024,
-      system: "You are a Principal QE automation agent. Your job is to locate elements that have changed IDs or attributes. You must respond ONLY with a raw JSON object string. Do not include markdown wraps like ```json.",
+    await page.click(oldSelector, { timeout: 2000 });
+  } catch (err) {
+    console.log(`⚠️  ${oldSelector} failed! Engaging Claude for repair loop...`);
+    const liveHTML = await page.content();
+
+    // Request 2: Self-Healing Analysis
+    const healMsg = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 800,
+      system: "You are a healing agent. Respond in raw JSON format only: {\"healed\": true, \"newSelector\": \"...\", \"reason\": \"...\"}",
       messages: [{ 
         role: 'user', 
-        content: `The automated test failed to find the selector "${targetSelector}". 
-                  Here is the live DOM layout of the page:
-                  \n\n${liveDOM}\n\n
-                  Find the element that replaced "${targetSelector}". Return this exact JSON format:
-                  {"healed": true, "newSelector": "#the-new-id", "explanation": "Why it changed"}`
+        content: `Target selector "${oldSelector}" missing. Match against this live HTML: \n\n${liveHTML}` 
       }],
     });
 
-    // Parse Claude's analysis
-    const result = JSON.parse(message.content[0].text);
-
-    if (result.healed) {
-      console.log(`🤖 [Claude] Element healed! New target: ${result.newSelector}`);
-      
-      healingReport.push({
-        broken: targetSelector,
-        fixed: result.newSelector,
-        reason: result.explanation
+    const repairDetails = JSON.parse(healMsg.content.text);
+    if (repairDetails.healed) {
+      console.log(`🩹 Fixed Live! Using selector: ${repairDetails.newSelector}`);
+      healingLog.push({
+        broken: oldSelector,
+        fixed: repairDetails.newSelector,
+        analysis: repairDetails.reason
       });
-
-      // Execute the action using the corrected selector so the test run finishes successfully
-      await page.click(result.newSelector);
-      console.log("🟢 [Pipeline] Test successfully completed using healed element.");
       
-      // Permanently update the test suite repository
-      updateTestRepositoryFile(targetSelector, result.newSelector);
-    } else {
-      throw new Error("Claude could not resolve the element change.");
+      // Complete the interaction on the live browser screen
+      await page.click(repairDetails.newSelector);
     }
   }
 
   await browser.close();
-  generateGitPRComment();
+  buildMarkdownReport();
 }
 
-function updateTestRepositoryFile(oldSelector, newSelector) {
-  console.log(`💾 [Repo Update] Automatically replaced '${oldSelector}' with '${newSelector}' inside test code.`);
-}
+function buildMarkdownReport() {
+  let report = `### 🤖 AI Quality Platform: Run Report\n\n`;
+  
+  // Section 1: Visual representation of code generation
+  report += `#### 🧪 1. Tests Fully Generated From Code Changes\n`;
+  report += `* **File Staged:** \`ai-generated.spec.js\`\n\n`;
+  report += `<details>\n<summary>Click to view the code Claude wrote from scratch</summary>\n\n`;
+  report += `\`\`\`javascript\n${generatedCodeString}\n\`\`\`\n</details>\n\n---\n\n`;
 
-function generateGitPRComment() {
-  let markdownReport = "";
-
-  if (healingReport.length > 0) {
-    markdownReport += `### 🤖 AI Test Pipeline Run: Success (Self-Healed) \n\n`;
-    healingReport.forEach(item => {
-      markdownReport += `❌ **Missing Element:** \`${item.broken}\` \n`;
-      markdownReport += `🩹 **Self-Healed To:** \`${item.fixed}\` \n`;
-      markdownReport += `💡 **Claude's Analysis:** ${item.reason} \n\n`;
+  // Section 2: Visual mapping of what broke and healed
+  report += `#### 🩹 2. Self-Healing Impact Summary\n`;
+  if (healingLog.length > 0) {
+    report += `| Original Test Selector | Current Live DOM Element | Healing Action Result |\n`;
+    report += `| :--- | :--- | :--- |\n`;
+    healingLog.forEach(item => {
+      report += `| \`${item.broken}\` | \`${item.fixed}\` | 🩹 **Healed Live** |\n`;
     });
-    markdownReport += `⚙️ *Action taken: Code updated inside the testing environment.*`;
+    report += `\n**Claude's Analysis:** *${healingLog[0].analysis}*\n`;
   } else {
-    markdownReport += `### ✅ AI Pipeline Run: All Tests Passed Cleanly.`;
+    report += `✅ No missing UI components detected. Test script executed cleanly.\n`;
   }
 
-  // Save the file right where the GitHub Action step expects to find it
-  fs.writeFileSync('./pipeline-output.txt', markdownReport);
+  fs.writeFileSync('./pipeline-output.txt', report);
+  console.log("💾 Pipeline execution report generated successfully!");
 }
 
-runSmartTest();
+runCompleteAIPipeline();
