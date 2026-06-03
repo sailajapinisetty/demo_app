@@ -359,7 +359,7 @@ function CheckoutPage({ cartItems, subtotal, onCheckoutComplete }) {
           value={name}
           onChange={(event) => setName(event.target.value)}
           required
-          data-testid="checkout-name"
+          data-testid="checkout-fullname"
         />
 
         <label htmlFor="email">Email</label>

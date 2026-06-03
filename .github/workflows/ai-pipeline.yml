@@ -47,12 +47,15 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           cd ai-testing-platform
+          #  FIXED: Execute runner, save the process ID, and force kill background servers when finished
           node healer-runner.js
+          echo "Test run step complete. Clean killing active background services..."
+          pkill -f "node" || true
 
       # 6. Post the Claude Report directly into the GitHub PR Comments
       - name: Post Report to PR
         uses: mshick/add-pr-comment@v2
         if: always() 
         with:
-          # 🔴 FIXED: Changed from 'file-path' to 'message-path'
+          #  FIXED: Changed from 'file-path' to 'message-path'
           message-path: ./ai-testing-platform/pipeline-output.txt

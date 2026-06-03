@@ -14,7 +14,7 @@ let healingLog = [];
 
 async function runCompleteAIPipeline() {
   try {
-    console.log("🤖 [AI Engine] Step 1: Generating full Playwright test from React source...");
+    console.log(" [AI Engine] Step 1: Generating full Playwright test from React source...");
     
     // Read the developer's React source code to analyze components and layout
     let appCode = "";
@@ -39,7 +39,7 @@ async function runCompleteAIPipeline() {
     const rawTextOutput = genMsg.text || (genMsg.content && genMsg.content[0]?.text) || "";
     
     if (!rawTextOutput) {
-      console.error("❌ Claude returned an empty response block.");
+      console.error(" Claude returned an empty response block.");
       process.exit(1);
     }
 
@@ -48,11 +48,11 @@ async function runCompleteAIPipeline() {
     generatedCodeString = codeMatch ? codeMatch[1].trim() : rawTextOutput.trim();
     
     fs.writeFileSync('./ai-generated.spec.js', generatedCodeString);
-    console.log("✅ Fresh Playwright script written to local platform: ./ai-generated.spec.js");
+    console.log(" Fresh Playwright script written to local platform: ./ai-generated.spec.js");
 
     // ----------------------------------------------------------------------------------
     
-    console.log("🚀 [AI Engine] Step 2: Running Execution with Live Self-Healing check...");
+    console.log(" [AI Engine] Step 2: Running Execution with Live Self-Healing check...");
     
     // Dynamic headless mode: True in GitHub cloud environment, False locally for live screen demos
     const isCI = process.env.CI ? true : false;
@@ -70,9 +70,9 @@ async function runCompleteAIPipeline() {
     try {
       // Attempt to click the outdated element
       await page.click(oldSelector, { timeout: 3000 });
-      console.log("✅ Interaction passed naturally without healing requirement.");
+      console.log(" Interaction passed naturally without healing requirement.");
     } catch (err) {
-      console.log(`⚠️  Element [${oldSelector}] not found! Engaging Claude self-healing loop...`);
+      console.log(` Element [${oldSelector}] not found! Engaging Claude self-healing loop...`);
       
       // Capture the current live HTML state from the active browser memory
       const liveHTML = await page.content();
@@ -95,7 +95,7 @@ async function runCompleteAIPipeline() {
       const repairDetails = JSON.parse(cleanJSONString);
       
       if (repairDetails.healed) {
-        console.log(`🩹 Fixed Live! Using selector: ${repairDetails.newSelector}`);
+        console.log(` Fixed Live! Using selector: ${repairDetails.newSelector}`);
         
         // Log the mutation metrics for the final GitHub PR comment report
         healingLog.push({
@@ -122,30 +122,30 @@ async function runCompleteAIPipeline() {
 }
 
 function buildMarkdownReport() {
-  let report = `### 🤖 AI Quality Platform: Run Report\n\n`;
+  let report = `###  AI Quality Platform: Run Report\n\n`;
   
   // Section 1: Displaying the freshly written code artifact
-  report += `#### 🧪 1. Tests Fully Generated From Code Changes\n`;
+  report += `####  1. Tests Fully Generated From Code Changes\n`;
   report += `* **File Staged:** \`ai-generated.spec.js\`\n\n`;
   report += `<details>\n<summary>Click to view the code Claude wrote from scratch</summary>\n\n`;
   report += `\`\`\`javascript\n${generatedCodeString || '// No test generated'}\n\`\`\`\n</details>\n\n---\n\n`;
 
   // Section 2: Visual matrix summary of any healing modifications
-  report += `#### 🩹 2. Self-Healing Impact Summary\n`;
+  report += `####  2. Self-Healing Impact Summary\n`;
   if (healingLog.length > 0) {
     report += `| Original Test Selector | Current Live DOM Element | Healing Action Result |\n`;
     report += `| :--- | :--- | :--- |\n`;
     healingLog.forEach(item => {
-      report += `| \`${item.broken}\` | \`${item.fixed}\` | 🩹 **Healed Live** |\n`;
+      report += `| \`${item.broken}\` | \`${item.fixed}\` |  **Healed Live** |\n`;
     });
     report += `\n**Claude's Analysis:** *${healingLog[0].analysis}*\n`;
   } else {
-    report += `✅ No missing UI components detected. Generated test scripts executed cleanly.\n`;
+    report += ` No missing UI components detected. Generated test scripts executed cleanly.\n`;
   }
 
   // Save the report text to disk so the GitHub runner's 'message-path' can grab it
   fs.writeFileSync('./pipeline-output.txt', report);
-  console.log("💾 Pipeline execution report generated successfully: ./pipeline-output.txt");
+  console.log(" Pipeline execution report generated successfully: ./pipeline-output.txt");
 }
 
 runCompleteAIPipeline();
