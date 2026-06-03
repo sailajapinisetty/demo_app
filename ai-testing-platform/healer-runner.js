@@ -37,7 +37,7 @@ async function runSmartTest() {
     
     // Call Claude to analyze the DOM layout and resolve the missing button
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022', // Fast and accurate for code/DOM analysis
+      model: 'claude-sonnet-4-6', // Fast and accurate for code/DOM analysis
       max_tokens: 1024,
       system: "You are a Principal QE automation agent. Your job is to locate elements that have changed IDs or attributes. You must respond ONLY with a raw JSON object string. Do not include markdown wraps like ```json.",
       messages: [{ 
