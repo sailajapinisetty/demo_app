@@ -64,5 +64,5 @@ jobs:
         with:
           name: ai-generated-test-suite
           path: |
-            ./ai-testing-platform/generated.spec.js
+            ./ai-testing-platform/ai-generated.spec.js
             ./ai-testing-platform/pipeline-output.txt
