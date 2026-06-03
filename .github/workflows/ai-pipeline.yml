@@ -4,6 +4,11 @@ on:
   pull_request:
     branches: [ main ]
 
+# CRITICAL: Gives GitHub Actions permission to write comments back to your PR
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   ai-test-and-heal:
     runs-on: ubuntu-latest
@@ -13,7 +18,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetches all history so we can look at the git diff
+          fetch-depth: 0 
 
       # 2. Set up Node.js environment
       - name: Set up Node.js
@@ -26,7 +31,6 @@ jobs:
         run: |
           npm install
           npm run dev & 
-        # The '&' keeps it running in the background so the runner can proceed
 
       # 4. Install dependencies for your AI platform folder
       - name: Install Platform Dependencies
@@ -41,12 +45,11 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           cd ai-testing-platform
-          node healer-runner.js > pipeline-output.txt
-          cat pipeline-output.txt
+          node healer-runner.js
 
       # 6. Post the Claude Report directly into the GitHub PR Comments
       - name: Post Report to PR
-        uses: mshick/github-actions-comment-on-pr@v2
-        if: always()
+        uses: mshick/add-pr-comment@v2
+        if: always() # Ensures the report posts even if tests fail
         with:
-          filePath: ./ai-testing-platform/pipeline-output.txt
+          file-path: ./ai-testing-platform/pipeline-output.txt
