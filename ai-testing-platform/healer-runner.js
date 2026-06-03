@@ -150,4 +150,10 @@ function buildMarkdownReport() {
   console.log(" Pipeline execution report generated successfully: ./pipeline-output.txt");
 }
 
-runCompleteAIPipeline();
+runCompleteAIPipeline().then(() => {
+  console.log("🏁 Pipeline loop completely done. Sending clean exit signal.");
+  process.exit(0); // 🔴 FIXED: Forces Node to close execution handles cleanly
+}).catch((err) => {
+  console.error("❌ Fatal loop error:", err);
+  process.exit(1);
+});
