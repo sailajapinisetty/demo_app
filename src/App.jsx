@@ -170,9 +170,9 @@ function HomePage({ addToCart, cartCount }) {
       </div>
 
       <div className="filters">
-        <label htmlFor="search">Search</label>
+        <label htmlFor="productsearch">Search</label>
         <input
-          id="search"
+          id="productsearch"
           type="search"
           placeholder="Try: Watch"
           value={search}
