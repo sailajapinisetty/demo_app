@@ -214,7 +214,7 @@ function HomePage({ addToCart, cartCount }) {
                     to={`/product/${product.id}`}
                     data-testid={`view-product-${product.id}`}
                   >
-                    Details
+                    More Details
                   </Link>
                   <button
                     type="button"
@@ -353,9 +353,9 @@ function CheckoutPage({ cartItems, subtotal, onCheckoutComplete }) {
     <section className="page checkout-page" data-testid="checkout-page">
       <h1>Checkout</h1>
       <form className="panel checkout-form" onSubmit={handleSubmit} data-testid="checkout-form">
-        <label htmlFor="fullname">Full name</label>
+        <label htmlFor="name">Full name</label>
         <input
-          id="fullname"
+          id="name"
           value={name}
           onChange={(event) => setName(event.target.value)}
           required
