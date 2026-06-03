@@ -221,7 +221,7 @@ function HomePage({ addToCart, cartCount }) {
                     onClick={() => addToCart(product.id)}
                     data-testid={`add-to-cart-${product.id}`}
                   >
-                    Add
+                    Add to cart
                   </button>
                 </div>
               </div>
