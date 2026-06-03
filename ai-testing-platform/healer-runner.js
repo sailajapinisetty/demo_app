@@ -12,7 +12,10 @@ let healingReport = [];
 
 async function runSmartTest() {
   // 1. Launch a browser window (headed mode so the audience can see it)
-  const browser = await chromium.launch({ headless: false, slowMo: 500 });
+  const browser = await chromium.launch({ 
+    headless: process.env.CI ? true : false, 
+    slowMo: process.env.CI ? 0 : 500 
+  });
   const page = await browser.newPage();
   
   // Assumes your React dev server is running locally on port 5173 or 3000
