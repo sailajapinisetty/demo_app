@@ -4,7 +4,6 @@ on:
   pull_request:
     branches: [ main ]
 
-# CRITICAL: Gives GitHub Actions permission to write comments back to your PR
 permissions:
   pull-requests: write
   contents: read
@@ -12,50 +11,48 @@ permissions:
 jobs:
   ai-test-and-heal:
     runs-on: ubuntu-latest
+    timeout-minutes: 5 # Safety net to prevent unexpected runaway bills
 
     steps:
-      # 1. Check out the repository code
+      # 1. Check out the codebase
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 
 
-      # 2. Set up Node.js environment
+      # 2. Set up clean Node environment
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-     # 3. Start your React App using PM2 (Ensures clean process detachment)
-      - name: Install & Start React Demo App
+      # 3. Clean install application and platform requirements
+      - name: Install All Dependencies
         run: |
           npm install
-          npm install -g pm2
-          pm2 start npm --name "react-app" -- run dev
-          # Wait up to 30 seconds for the application port to become live
-          npx wait-on http://localhost:5173 --timeout 30000
-
-      # 4. Install dependencies for your AI platform folder
-      - name: Install Platform Dependencies
-        run: |
           cd ai-testing-platform
           npm install
           npx playwright install --with-deps
 
-       # 5. Run the Smart Test Script using Claude & Clean Stop Server
+      # 4. 🚀 THE NATIVE FIX: Boot the React Server quietly using nohup
+      # This strips all process handles, forcing the Linux shell to proceed immediately.
+      - name: Start React App in Background
+        run: |
+          nohup npm run dev > react-server.log 2>&1 &
+          echo "Waiting for http://localhost:5173 to wake up..."
+          npx wait-on http://localhost:5173 --timeout 30000
+
+      # 5. Execute Claude test generation, browser execution, and self-healing logic
       - name: Run Self-Healing Automation
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           cd ai-testing-platform
           node healer-runner.js
-          echo "Pipeline calculations complete. Stopping active background servers..."
-          pm2 delete all || true
 
-      # 6. Post the Claude Report directly into the GitHub PR Comments
+      # 6. Post the generated pipeline markdown report directly to the PR comments
       - name: Post Report to PR
         uses: mshick/add-pr-comment@v2
-        if: always() 
+        if: always() # Ensures the metrics drop even if tests hit structural breaks
         with:
-          #  FIXED: Changed from 'file-path' to 'message-path'
           message-path: ./ai-testing-platform/pipeline-output.txt
